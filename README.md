@@ -1,5 +1,9 @@
 My custom dotfiles
 
+# Currently Using
+- zsh
+- oh-my-posh
+
 # Usage
 Requires `GNU Stow`, then run `stow -v -R .`
 - `brew install stow`
