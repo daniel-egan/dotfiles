@@ -1,0 +1,25 @@
+services:
+  devcontainer:
+    container_name: "${COMPOSE_PROJECT_NAME}"
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ..:/workspace/${COMPOSE_PROJECT_NAME}:cached
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    command: sleep infinity
+    networks:
+      - dev_network
+    environment:
+      - DISPLAY=host.docker.internal:0.0
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: "nvidia"
+    #           count: 1
+    #           capabilities: [gpu]
+
+networks:
+  dev_network:
+    driver: bridge
