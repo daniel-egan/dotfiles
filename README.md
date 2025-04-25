@@ -11,3 +11,6 @@ Requires `GNU Stow`, then run `stow -v -R .`
 # Fonts
 Currently using `NotoSansM Nerd Font Mono`
 - `brew install --cask font-noto-nerd-font`
+
+# Development
+Scan folder for secrets with `gitleaks git -v .`
