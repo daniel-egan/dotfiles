@@ -5,6 +5,9 @@
   "service": "devcontainer",
   "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}_devcontainer",
   "shutdownAction": "stopCompose",
+  "remoteEnv": {
+    "WORKSPACE_FOLDER": "/workspace/${localWorkspaceFolderBasename}_devcontainer"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
