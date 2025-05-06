@@ -1,0 +1,10 @@
+title = "Custom Gitleaks configuration"
+
+[extend]
+# useDefault will extend the default gitleaks config built in to the binary
+useDefault = true
+
+[[rules]]
+id = "username-detection"
+description = "Detects occurrences of username 'danegan'"
+regex = '(?i)danegan'
