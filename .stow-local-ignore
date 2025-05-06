@@ -4,21 +4,22 @@ RCS
 .+,v
 
 CVS
-\.\#.+ # CVS conflict files / emacs lock files
+\.\#.+       # CVS conflict files / emacs lock files
 \.cvsignore
 
 \.svn
-\_darcs
+_darcs
 \.hg
 
 \.git
 \.gitignore
+\.gitmodules
 
-.+~ # emacs backup files
-\#.\*\# # emacs autosave files
+.+~          # emacs backup files
+\#.*\#       # emacs autosave files
 
-^/README._
-^/LICENSE._
+^/README.*
+^/LICENSE.*
 ^/COPYING
 
 # MY CHANGES
@@ -28,3 +29,4 @@ tmuxContainer
 obsidian
 \.gitattributes
 bashScripts
+\.gitleaks.toml
