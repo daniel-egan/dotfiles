@@ -15,5 +15,5 @@ source ~/.config/zsh/aliases.zsh
 source ${ZDOTDIR:-$HOME}/.antidote/antidote.zsh
 antidote load ~/.config/zsh/.zsh_plugins.txt
 
-# Add Homebrew to shell
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# Package managers
+source ~/.config/zsh/package_managers.zsh
