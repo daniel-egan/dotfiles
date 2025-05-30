@@ -1,0 +1,1 @@
+def ll [] { ls -la | sort-by type name -i }
