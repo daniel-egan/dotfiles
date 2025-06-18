@@ -1,8 +1,7 @@
 My custom dotfiles
 
-# Currently Using
-- zsh
-- oh-my-posh
+# Shell
+- Nushell
 
 # Usage
 Requires `GNU Stow`, then run `stow -v -R .`
