@@ -36,3 +36,6 @@ autocorrect = prompt
 [rerere]
 enabled = true
 autoupdate = true
+
+[pull]
+rebase = false
