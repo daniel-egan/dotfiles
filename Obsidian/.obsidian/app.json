@@ -1,1 +1,22 @@
-{}
+{
+  "showLineNumber": true,
+  "vimMode": true,
+  "trashOption": "local",
+  "newFileLocation": "current",
+  "newLinkFormat": "relative",
+  "showUnsupportedFiles": true,
+  "attachmentFolderPath": "./Attachments",
+  "promptDelete": false,
+  "userIgnoreFilters": [
+    "Admin/Templates/"
+  ],
+  "showInlineTitle": false,
+  "alwaysUpdateLinks": true,
+  "pdfExportSettings": {
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 100
+  },
+  "defaultViewMode": "preview"
+}

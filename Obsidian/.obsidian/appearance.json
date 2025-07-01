@@ -1,1 +1,9 @@
-{}
+{
+  "theme": "obsidian",
+  "cssTheme": "Minimal",
+  "interfaceFontFamily": "NotoSansM Nerd Font Mono",
+  "textFontFamily": "NotoSansM Nerd Font Mono",
+  "monospaceFontFamily": "NotoSansM Nerd Font Mono",
+  "showViewHeader": true,
+  "showRibbon": true
+}
