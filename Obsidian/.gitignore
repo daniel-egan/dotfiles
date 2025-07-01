@@ -2,6 +2,6 @@
 .obsidian/workspace-mobile.json
 .trash/
 .DS_Store
-.obsidian/plugins
 
 .obsidian/plugins/various-complements/histories.json
+*.js
