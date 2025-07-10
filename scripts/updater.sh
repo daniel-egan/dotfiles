@@ -36,7 +36,8 @@ echo
 if command -v brew &>/dev/null; then
   echo "===== Homebrew Update & Upgrade ====="
   brew update
-  brew upgrade
+  brew upgrade --formulae
+  brew upgrade --cask
   brew cleanup
 else
   echo "Homebrew not found; skipping."
