@@ -1,7 +1,8 @@
 My custom dotfiles
 
-# Shell
+# Apps
 - Nushell
+- Neovim
 
 # Usage
 Requires `GNU Stow`, then run `stow -v -R .`
