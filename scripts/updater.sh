@@ -33,6 +33,24 @@ else
 fi
 
 echo
+if command -v pacman &>/dev/null; then
+  echo "===== Pacman (Arch) Update & Upgrade ====="
+  sudo pacman -Syu --noconfirm
+  echo
+else
+  echo "Pacman not found; skipping."
+fi
+
+echo
+if command -v paru &>/dev/null; then
+  echo "===== Paru (AUR) Update & Upgrade ====="
+  paru -Syu --noconfirm
+  echo
+else
+  echo "Paru not found; skipping."
+fi
+
+echo
 if command -v brew &>/dev/null; then
   echo "===== Homebrew Update & Upgrade ====="
   brew update
