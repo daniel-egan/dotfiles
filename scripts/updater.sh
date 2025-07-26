@@ -23,6 +23,7 @@ trap cleanup EXIT
 echo
 if command -v apt &>/dev/null; then
   echo "===== APT Update & Upgrade ====="
+  export DEBIAN_FRONTEND=noninteractive
   sudo apt update -y
   sudo apt upgrade -y
   sudo apt autoremove -y
