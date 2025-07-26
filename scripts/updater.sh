@@ -30,7 +30,7 @@ if command -v apt &>/dev/null; then
   sudo apt autoclean -y
   echo
 else
-  echo "APT not found; skipping."
+  echo "===== APT not found; skipping. ====="
 fi
 
 echo
@@ -39,7 +39,7 @@ if command -v pacman &>/dev/null; then
   sudo pacman -Syu --noconfirm
   echo
 else
-  echo "Pacman not found; skipping."
+  echo "===== Pacman not found; skipping. ====="
 fi
 
 echo
@@ -48,7 +48,7 @@ if command -v paru &>/dev/null; then
   paru -Syu --noconfirm
   echo
 else
-  echo "Paru not found; skipping."
+  echo "===== Paru not found; skipping. ====="
 fi
 
 echo
@@ -59,7 +59,7 @@ if command -v brew &>/dev/null; then
   brew upgrade --cask
   brew cleanup
 else
-  echo "Homebrew not found; skipping."
+  echo "===== Homebrew not found; skipping. ====="
 fi
 
 echo
@@ -67,7 +67,7 @@ if command -v flatpak &>/dev/null; then
   echo "===== Flatpak Update ====="
   flatpak update -y
 else
-  echo "Flatpak not found; skipping."
+  echo "===== Flatpak not found; skipping. ====="
 fi
 
 echo
