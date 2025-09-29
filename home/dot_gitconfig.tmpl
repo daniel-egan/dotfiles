@@ -1,6 +1,6 @@
 [user]
-email = {{ .chezmoi.email }}
-name = {{ .chezmoi.name }}
+email = {{ .email | quote}}
+name = {{ .name | quote }}
 
 [column]
 ui = auto
