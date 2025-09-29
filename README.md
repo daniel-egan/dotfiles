@@ -5,8 +5,9 @@ My custom dotfiles
 - Neovim
 
 # Usage
-Requires `GNU Stow`, then run `stow -v -R .`
-- `brew install stow`
+```
+/home/linuxbrew/.linuxbrew/bin/chezmoi init daniel-egan --ssh --branch chezmoi
+```
 
 # Fonts
 Currently using `NotoSansM Nerd Font Mono`
