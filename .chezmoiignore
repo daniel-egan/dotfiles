@@ -1,3 +1,6 @@
+README.md
+LICENSE
+
 # Ignore Windows paths on Linux
 {{ if ne .chezmoi.os "windows" }}
 AppData/
