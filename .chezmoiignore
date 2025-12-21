@@ -1,0 +1,9 @@
+# Ignore Windows paths on Linux
+{{ if ne .chezmoi.os "windows" }}
+AppData/
+{{ end }}
+
+# Ignore Linux paths on Windows
+{{ if ne .chezmoi.os "linux" }}
+.config/
+{{ end }}
