@@ -1,6 +1,6 @@
 [data]
-    email = {{ promptStringOnce . "email" "Enter Email" | quote }}
-    name = {{ promptStringOnce . "name" "Enter Name" | quote }}
+    email = {{ promptStringOnce . "email" "Enter Email: " | quote }}
+    name = {{ promptStringOnce . "name" "Enter Name: " | quote }}
 
 [git]
     autoCommit = true
@@ -12,4 +12,3 @@
 [edit]
     command = "code"
     args = ["--wait"]
-
