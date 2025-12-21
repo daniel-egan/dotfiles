@@ -1,6 +1,21 @@
+{{/* Setting Defaults */}}
+{{- $work := false -}}
+{{- $email := "95421705+daniel-egan@users.noreply.github.com" -}}
+{{- $name := "daniel-egan" -}}
+
+{{/* Prompt if this is a work machine */}}
+{{- $work = promptBoolOnce . "work" "Is this a work machine?" -}}
+
+{{/* If work, prompt for work email; otherwise use personal default */}}
+{{- if $work -}}
+{{-   $email = promptStringOnce . "email" "Enter work email" -}}
+{{- $name = promptStringOnce . "name" "Enter work name" -}}
+{{- end -}}
+
+
 [data]
-    email = {{ promptStringOnce . "email" "Enter Email: " | quote }}
-    name = {{ promptStringOnce . "name" "Enter Name: " | quote }}
+    email = "{{ $email }}"
+    name = "{{ $name }}"
 
 [git]
     autoCommit = true
