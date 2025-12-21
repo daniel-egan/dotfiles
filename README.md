@@ -6,7 +6,7 @@ My custom dotfiles
 
 # Usage
 ```
-/home/linuxbrew/.linuxbrew/bin/chezmoi init daniel-egan --ssh --branch chezmoi
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init daniel-egan --ssh --branch chezmoi
 ```
 
 # Fonts
