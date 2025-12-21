@@ -4,7 +4,7 @@
 {{- $name := "daniel-egan" -}}
 
 {{/* Prompt if this is a work machine */}}
-{{- $work = promptBoolOnce . "work" "Is this a work machine?" -}}
+{{- $work = promptBoolOnce . "work" "Is this a work machine? t/f (lowercase)" -}}
 
 {{/* If work, prompt for work email; otherwise use personal default */}}
 {{- if $work -}}
