@@ -13,10 +13,11 @@ My custom dotfiles
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init daniel-egan --ssh --branch chezmoi
 ```
 
-## Edit Configs
+## Common Commands
 
-- `chezmoi edit-config`
-- `chezmoi edit-config-template`
+- `chezmoi edit` to open the dotfiles config in VS Code
+- `chezmoi edit-config` if you typed in one of the prompts wrong
+- `chezmoi ignored` to check if you have correctly ignored a folder
 
 # Fonts
 
