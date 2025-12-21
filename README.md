@@ -5,9 +5,13 @@ My custom dotfiles
 - Neovim
 
 # Usage
+## Initialise
 ```
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init daniel-egan --ssh --branch chezmoi
 ```
+## Edit Configs
+- `chezmoi edit-config`
+- `chezmoi edit-config-template`
 
 # Fonts
 Currently using `NotoSansM Nerd Font Mono`
