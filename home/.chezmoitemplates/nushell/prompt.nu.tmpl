@@ -43,7 +43,7 @@ $env.TRANSIENT_PROMPT_COMMAND_RIGHT = $get_execution_info
 # Main prompt configuration - shows current directory and prompt character
 $env.PROMPT_COMMAND = {|| 
     # Replace home path with ~ for cleaner display
-    let dir = ($env.PWD | str replace $nu.home-path "~")
+    let dir = ($env.PWD | str replace $nu.home-dir "~")
     # Display directory in blue on one line, prompt character on next line
     $"(ansi blue)($dir)(ansi reset)\n❯ "
 }
