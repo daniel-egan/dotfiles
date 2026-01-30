@@ -10,7 +10,7 @@ My custom dotfiles
 ## Initialise
 
 ```
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init daniel-egan --ssh --branch chezmoi
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply daniel-egan --ssh --branch chezmoi
 ```
 
 ## Common Commands
