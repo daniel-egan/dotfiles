@@ -71,4 +71,12 @@ else
 fi
 
 echo
+if command -v winget &>/dev/null; then
+  echo "===== Winget Update ====="
+  winget upgrade --all --accept-source-agreements --accept-package-agreements
+else
+  echo "===== Winget not found; skipping. ====="
+fi
+
+echo
 echo "===== All done! ====="
