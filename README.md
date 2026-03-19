@@ -36,6 +36,28 @@ Currently using `NotoSansM Nerd Font Mono`
 
 - `brew install --cask font-noto-nerd-font`
 
+# Scripts
+
+## create_template.sh
+
+This script imports canonical directory trees or single files into chezmoi templates, creating wrapper .tmpl files in target directories.
+
+### Examples
+
+```bash
+# Import a directory (e.g., LazyVim starter)
+./scripts/create_template.sh /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim AppData/Local/nvim
+
+# Import a single file
+./scripts/create_template.sh /path/to/config.lua home/.chezmoitemplates/lua-config home/dot_config/lua/config.lua
+
+# Dry run to see what would happen
+./scripts/create_template.sh --dry-run /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
+
+# Force overwrite existing wrappers
+./scripts/create_template.sh --force /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
+```
+
 # Development
 
 Scan folder for secrets with `gitleaks git -v .`

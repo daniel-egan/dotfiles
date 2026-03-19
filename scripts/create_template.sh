@@ -2,7 +2,7 @@
 # create_template.sh
 #
 # Purpose:
-#   Take a "canonical" directory tree (e.g. a LazyVim starter clone)
+#   Take a "canonical" directory tree or single file (e.g. a LazyVim starter clone or a config file)
 #   and make it your single source of truth inside chezmoi's .chezmoitemplates,
 #   then generate thin wrapper *.tmpl files in one or more chezmoi source-state
 #   target directories that just include those templates.
@@ -73,10 +73,10 @@ trap cleanup EXIT
 usage() {
   cat <<'EOF'
 Usage:
-  create_template.sh [OPTIONS] <source_dir> <templates_dest_dir> <target_dir1> [target_dir2 ...]
+  create_template.sh [OPTIONS] <source_path> <templates_dest_dir> <target_dir1> [target_dir2 ...]
 
 Arguments:
-  source_dir           Directory on your OS to import (e.g. /tmp/starter)
+  source_path          File or directory on your OS to import (e.g. /tmp/starter or /path/to/config.lua)
   templates_dest_dir   Where to copy it under your chezmoi source state,
                        e.g. home/.chezmoitemplates/neovim
   target_dirN          One or more chezmoi source-state directories where
@@ -88,13 +88,14 @@ Options:
   -n, --dry-run        Show what would be done without making any changes
   -v, --verbose        Print each file as it is created or skipped
   -f, --force          Overwrite existing wrapper .tmpl files
-  --skip PATTERN       Additional path patterns (relative to source_dir)
+  --skip PATTERN       Additional path patterns (relative to source_path)
                        to skip. Can be repeated.
 
 Examples:
   ./create_template.sh /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim AppData/Local/nvim
   ./create_template.sh --force --skip '.git' --skip 'lazy-lock.json' /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
   ./create_template.sh --dry-run -v /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
+  ./create_template.sh /path/to/config.lua home/.chezmoitemplates/lua-config home/dot_config/lua/config.lua
 EOF
 }
 
@@ -123,7 +124,7 @@ done
 
 [[ $# -ge 3 ]] || { usage >&2; exit 2; }
 
-src_dir="$1"
+src_path="$1"
 templates_dest="$2"
 shift 2
 targets=("$@")
@@ -137,7 +138,16 @@ fi
 
 # --- Validate inputs ---
 
-[[ -d "$src_dir" ]] || { log_error "source_dir does not exist or is not a directory: $src_dir"; exit 2; }
+[[ -e "$src_path" ]] || { log_error "source_path does not exist: $src_path"; exit 2; }
+is_file=0
+src_basename=""
+if [[ -f "$src_path" ]]; then
+  is_file=1
+  src_basename="$(basename "$src_path")"
+elif [[ ! -d "$src_path" ]]; then
+  log_error "source_path is neither a file nor a directory: $src_path"
+  exit 2
+fi
 
 # Catch common mistake: running from wrong directory
 if [[ "$templates_dest" == home/* ]]; then
@@ -185,42 +195,64 @@ if (( ! dry_run )); then
   created_dirs+=("$templates_dest")
 fi
 
-(
-  cd "$src_dir"
-
-  # Build tar exclude args
-  tar_excludes=()
-  for pat in "${skip_patterns[@]}"; do
-    tar_excludes+=("--exclude=$pat")
-  done
-
+if (( is_file )); then
+  # For single file
+  src_basename="$(basename "$src_path")"
+  dest_file="$templates_dest/$src_basename"
   if (( dry_run )); then
-    log_verb "Would copy from $src_dir (excluding: ${skip_patterns[*]})"
+    log_verb "Would copy $src_path to $dest_file"
   else
-    # shellcheck disable=SC2068
-    tar cf - "${tar_excludes[@]}" . \
-      | (cd "$OLDPWD/$templates_dest" && tar xf -)
+    cp "$src_path" "$dest_file"
   fi
-)
+else
+  # For directory
+  (
+    cd "$src_path"
+
+    # Build tar exclude args
+    tar_excludes=()
+    for pat in "${skip_patterns[@]}"; do
+      tar_excludes+=("--exclude=$pat")
+    done
+
+    if (( dry_run )); then
+      log_verb "Would copy from $src_path (excluding: ${skip_patterns[*]})"
+    else
+      # shellcheck disable=SC2068
+      tar cf - "${tar_excludes[@]}" . \
+        | (cd "$OLDPWD/$templates_dest" && tar xf -)
+    fi
+  )
+fi
 
 # --- Discover files to wrap ---
 
 if (( dry_run )); then
   # In dry-run mode, enumerate from source (since dest wasn't populated)
-  source_for_listing="$src_dir"
+  source_for_listing="$src_path"
 else
   source_for_listing="$templates_dest"
 fi
 
-# Build find exclusions
-find_excludes=()
-for pat in "${skip_patterns[@]}"; do
-  find_excludes+=(-path "./$pat" -prune -o)
-done
+if (( is_file )); then
+  # For single file
+  if (( dry_run )); then
+    rel_files=("$src_basename")
+  else
+    rel_files=("$src_basename")
+  fi
+else
+  # For directory
+  # Build find exclusions
+  find_excludes=()
+  for pat in "${skip_patterns[@]}"; do
+    find_excludes+=(-path "./$pat" -prune -o)
+  done
 
-mapfile -t rel_files < <(
-  cd "$source_for_listing" && find . "${find_excludes[@]}" -type f -print | sed 's|^\./||' | sort
-)
+  mapfile -t rel_files < <(
+    cd "$source_for_listing" && find . "${find_excludes[@]}" -type f -print | sed 's|^\./||' | sort
+  )
+fi
 
 if [[ ${#rel_files[@]} -eq 0 ]]; then
   log_error "No files found after copy in: $templates_dest"
