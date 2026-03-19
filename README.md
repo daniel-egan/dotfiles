@@ -46,16 +46,16 @@ This script imports canonical directory trees or single files into chezmoi templ
 
 ```bash
 # Import a directory (e.g., LazyVim starter)
-./scripts/create_template.sh /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim AppData/Local/nvim
+./scripts/create_template.sh /tmp/starter .chezmoitemplates/neovim dot_config/nvim AppData/Local/nvim
 
 # Import a single file
-./scripts/create_template.sh /path/to/config.lua home/.chezmoitemplates/lua-config home/dot_config/lua/config.lua
+./scripts/create_template.sh /path/to/config.lua .chezmoitemplates/lua-config dot_config/lua/config.lua
 
 # Dry run to see what would happen
-./scripts/create_template.sh --dry-run /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
+./scripts/create_template.sh --dry-run /tmp/starter .chezmoitemplates/neovim dot_config/nvim
 
 # Force overwrite existing wrappers
-./scripts/create_template.sh --force /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
+./scripts/create_template.sh --force /tmp/starter .chezmoitemplates/neovim dot_config/nvim
 ```
 
 # Development

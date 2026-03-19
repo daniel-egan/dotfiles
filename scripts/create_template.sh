@@ -77,11 +77,11 @@ Usage:
 
 Arguments:
   source_path          File or directory on your OS to import (e.g. /tmp/starter or /path/to/config.lua)
-  templates_dest_dir   Where to copy it under your chezmoi source state,
-                       e.g. home/.chezmoitemplates/neovim
+  templates_dest_dir   Where to copy it under your chezmoi source state (under home/),
+                       e.g. .chezmoitemplates/neovim (will be prefixed with home/)
   target_dirN          One or more chezmoi source-state directories where
-                       wrappers should be created,
-                       e.g. home/dot_config/nvim AppData/Local/nvim
+                       wrappers should be created (under home/),
+                       e.g. dot_config/nvim AppData/Local/nvim (will be prefixed with home/)
 
 Options:
   -h, --help           Show this help message
@@ -92,10 +92,10 @@ Options:
                        to skip. Can be repeated.
 
 Examples:
-  ./create_template.sh /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim AppData/Local/nvim
-  ./create_template.sh --force --skip '.git' --skip 'lazy-lock.json' /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
-  ./create_template.sh --dry-run -v /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim
-  ./create_template.sh /path/to/config.lua home/.chezmoitemplates/lua-config home/dot_config/lua/config.lua
+  ./create_template.sh /tmp/starter .chezmoitemplates/neovim dot_config/nvim AppData/Local/nvim
+  ./create_template.sh --force --skip '.git' --skip 'lazy-lock.json' /tmp/starter .chezmoitemplates/neovim dot_config/nvim
+  ./create_template.sh --dry-run -v /tmp/starter .chezmoitemplates/neovim dot_config/nvim
+  ./create_template.sh /path/to/config.lua .chezmoitemplates/lua-config dot_config/lua/config.lua
 EOF
 }
 
@@ -128,6 +128,16 @@ src_path="$1"
 templates_dest="$2"
 shift 2
 targets=("$@")
+
+# Prepend 'home/' if not present, assuming .chezmoiroot is home
+if [[ "$templates_dest" != home/* ]]; then
+  templates_dest="home/$templates_dest"
+fi
+for i in "${!targets[@]}"; do
+  if [[ "${targets[i]}" != home/* ]]; then
+    targets[i]="home/${targets[i]}"
+  fi
+done
 
 # --- Validate bash version ---
 
