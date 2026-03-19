@@ -115,4 +115,4 @@ y = 6
 # Adjust the path if your Nushell is installed elsewhere
 # Find it with: which nu
 [terminal.shell]
-program = "{{ if eq .chezmoi.os \"windows\" }}nu.exe{{ else }}/home/linuxbrew/.linuxbrew/bin/nu{{ end }}"
+program = '{{ if eq .chezmoi.os "windows" }}nu.exe{{ else }}/home/linuxbrew/.linuxbrew/bin/nu{{ end }}'
