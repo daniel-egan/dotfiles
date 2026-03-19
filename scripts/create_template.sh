@@ -283,7 +283,12 @@ create_wrapper_for_target() {
   local target_root="$1"
   local rel="$2"
 
-  local wrapper_path="$target_root/$rel.tmpl"
+  local wrapper_path
+  if (( is_file )); then
+    wrapper_path="$target_root.tmpl"
+  else
+    wrapper_path="$target_root/$rel.tmpl"
+  fi
   local wrapper_dir
   wrapper_dir="$(dirname "$wrapper_path")"
 
