@@ -1,0 +1,43 @@
+[misc]
+# Cache sudo credentials upfront to avoid mid-run password prompts
+pre_sudo = true
+
+# Steps to always skip
+disable = ["firmware", "snap"]
+
+# Steps to run before all others
+first = ["chezmoi"]
+
+# Steps to run after all others
+last = ["flatpak"]
+
+# Ignore failures for noisy or unreliable steps
+ignore_failures = ["pip3"]
+
+# Clean up old temp files after a run
+cleanup = true
+
+# Send a desktop notification when done
+notify_end = "on_failure"
+
+# Don't ask for confirmations
+assume_yes = true
+
+[linux]
+# Arch: choose your AUR helper (autodetect, paru, yay, pikaur, etc.)
+arch_package_manager = "paru"
+# Extra args passed to yay/paru
+yay_arguments = "--nodevel"
+
+[flatpak]
+# Update system-wide Flatpak installs (requires sudo)
+use_sudo = true
+
+[python]
+# Update pip packages (disabled by default)
+enable_pip_review = true
+
+[firmware]
+# Only show available firmware updates, do not install
+upgrade = false
+
