@@ -1,355 +1,324 @@
 #!/usr/bin/env bash
-# create_template.sh
-#
-# Purpose:
-#   Take a "canonical" directory tree or single file (e.g. a LazyVim starter clone or a config file)
-#   and make it your single source of truth inside chezmoi's .chezmoitemplates,
-#   then generate thin wrapper *.tmpl files in one or more chezmoi source-state
-#   target directories that just include those templates.
-#
-# Example:
-#   ./create_template.sh /tmp/starter home/.chezmoitemplates/neovim home/dot_config/nvim AppData/Local/nvim
-#
-# What it does:
-#   1) Copies /tmp/starter/** -> home/.chezmoitemplates/neovim/**
-#   2) Creates wrapper templates:
-#        home/dot_config/nvim/<path>.tmpl        containing {{- template "neovim/<path>" . -}}
-#        AppData/Local/nvim/<path>.tmpl          containing {{- template "neovim/<path>" . -}}
-#
-# Notes:
-#   - Run this from your chezmoi source directory (i.e. after `chezmoi cd`),
-#     because paths like `home/...` are relative to the source state root.
-#   - It skips the source .git directory by default.
-#   - It will not overwrite existing wrappers unless you pass --force.
-#   - Requires bash 4+ (uses mapfile/readarray). macOS users: install bash
-#     via Homebrew and ensure /usr/local/bin/bash or /opt/homebrew/bin/bash
-#     is in your PATH ahead of the system bash 3.2.
-#
 set -euo pipefail
 
-# --- Globals ---
+# --- Configuration ---
+CHEZMOI_SOURCE_DIR=""
+TEMPLATES_DIR=""
 
-force=0
-dry_run=0
-verbose=0
-declare -a skip_patterns=(".git")
-declare -a created_dirs=()   # Track dirs we create, for cleanup on failure
+# --- Utility Functions ---
 
-# --- Color helpers (disabled if stdout is not a terminal) ---
-
-if [[ -t 1 ]]; then
-  RED=$'\033[0;31m'   GREEN=$'\033[0;32m'  YELLOW=$'\033[0;33m'
-  BLUE=$'\033[0;34m'  BOLD=$'\033[1m'      RESET=$'\033[0m'
-else
-  RED='' GREEN='' YELLOW='' BLUE='' BOLD='' RESET=''
-fi
-
-log_info()  { echo "${BLUE}==>${RESET} $*"; }
-log_ok()    { echo "${GREEN}==>${RESET} $*"; }
-log_warn()  { echo "${YELLOW}WARN:${RESET} $*" >&2; }
-log_error() { echo "${RED}ERROR:${RESET} $*" >&2; }
-log_verb()  { (( verbose )) && echo "    $*" || true; }
-
-# --- Cleanup on failure ---
-
-cleanup() {
-  local exit_code=$?
-  if (( exit_code != 0 )); then
-    log_error "Script failed (exit $exit_code). Cleaning up partially-created directories..."
-    for d in "${created_dirs[@]}"; do
-      if [[ -d "$d" ]]; then
-        rm -rf "$d"
-        log_verb "Removed: $d"
-      fi
-    done
-    log_error "Cleanup complete. No changes were persisted."
-  fi
+die() {
+    printf '\033[31mError: %s\033[0m\n' "$1" >&2
+    exit 1
 }
 
-trap cleanup EXIT
+info() {
+    printf '\033[36m>> %s\033[0m\n' "$1"
+}
 
-# --- Usage ---
+success() {
+    printf '\033[32m✓ %s\033[0m\n' "$1"
+}
+
+prompt() {
+    printf '\033[33m%s\033[0m ' "$1"
+}
+
+# --- Core Functions ---
+
+detect_source_dir() {
+    # Walk up from script location or cwd to find home/.chezmoiroot
+    local dir
+    dir="$(pwd)"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/home/.chezmoiroot" ]]; then
+            CHEZMOI_SOURCE_DIR="$dir/home"
+            TEMPLATES_DIR="$dir/home/.chezmoitemplates"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    die "Could not find home/.chezmoiroot in any parent directory. Run this from within your chezmoi repo."
+}
+
+# Convert a real target path like ~/.config/nushell/config.nu or %APPDATA%/nushell/config.nu
+# into chezmoi source path like dot_config/nushell/config.nu
+target_to_chezmoi_path() {
+    local target="$1"
+
+    # Normalize: expand ~ and common variables for path conversion
+    # Strip leading path prefixes to get the relative portion after the "root"
+    local rel_path="$target"
+
+    # Handle ~/.config/... -> dot_config/...
+    if [[ "$rel_path" =~ ^~/.config/(.*) ]]; then
+        rel_path="dot_config/${BASH_REMATCH[1]}"
+    elif [[ "$rel_path" =~ ^\$\{XDG_CONFIG_HOME:-~/.config\}/(.*) ]]; then
+        rel_path="dot_config/${BASH_REMATCH[1]}"
+    elif [[ "$rel_path" =~ ^XDG_CONFIG_HOME/(.*) ]]; then
+        rel_path="dot_config/${BASH_REMATCH[1]}"
+    elif [[ "$rel_path" =~ ^~/(.*) ]]; then
+        # Generic dotfile handling: ~/.foo -> dot_foo
+        local after="${BASH_REMATCH[1]}"
+        # Split into first component and rest
+        local first rest
+        first="$(echo "$after" | cut -d'/' -f1)"
+        rest="$(echo "$after" | cut -d'/' -f2- -s)"
+        if [[ "$first" == .* ]]; then
+            first="dot_${first#.}"
+        fi
+        if [[ -n "$rest" ]]; then
+            rel_path="${first}/${rest}"
+        else
+            rel_path="${first}"
+        fi
+    elif [[ "$rel_path" =~ ^%APPDATA%[/\\](.*) ]]; then
+        rel_path="AppData/Roaming/${BASH_REMATCH[1]}"
+    elif [[ "$rel_path" =~ ^%LOCALAPPDATA%[/\\](.*) ]]; then
+        rel_path="AppData/Local/${BASH_REMATCH[1]}"
+    elif [[ "$rel_path" =~ ^%USERPROFILE%[/\\](.*) ]]; then
+        local after="${BASH_REMATCH[1]}"
+        local first rest
+        first="$(echo "$after" | cut -d'/' -f1)"
+        rest="$(echo "$after" | cut -d'/' -f2- -s)"
+        if [[ "$first" == .* ]]; then
+            first="dot_${first#.}"
+        fi
+        if [[ -n "$rest" ]]; then
+            rel_path="${first}/${rest}"
+        else
+            rel_path="${first}"
+        fi
+    else
+        # If we can't parse it, just use it as-is (user gives relative chezmoi path)
+        rel_path="$target"
+    fi
+
+    # Normalize backslashes to forward slashes
+    rel_path="${rel_path//\\//}"
+
+    echo "$rel_path"
+}
+
+# Adds .tmpl extension to the chezmoi source path
+make_tmpl_path() {
+    echo "${1}.tmpl"
+}
+
+# Get a template name from a file path, used for {{ template "name" . }}
+# For single files: just the filename
+# For directories: dirname/filename to keep them organized
+make_template_name() {
+    local group_name="$1"  # empty for single file, dirname for directory mode
+    local filename="$2"
+
+    if [[ -n "$group_name" ]]; then
+        echo "${group_name}/${filename}"
+    else
+        echo "$filename"
+    fi
+}
+
+collect_destinations() {
+    local destinations=()
+    info "Enter destination paths where this should be managed by chezmoi."
+    info "Examples:"
+    echo "  ~/.config/topgrade/topgrade.toml"
+    echo "  %APPDATA%/topgrade/topgrade.toml"
+    echo "  ~/.config/nushell   (for directories)"
+    echo ""
+    info "Enter one path per line. Empty line when done."
+    echo ""
+
+    while true; do
+        prompt "Destination:"
+        local dest
+        read -r dest
+        [[ -z "$dest" ]] && break
+        destinations+=("$dest")
+    done
+
+    if [[ ${#destinations[@]} -eq 0 ]]; then
+        die "At least one destination is required."
+    fi
+
+    printf '%s\n' "${destinations[@]}"
+}
+
+process_single_file() {
+    local source_file="$1"
+    shift
+    local destinations=("$@")
+
+    local filename
+    filename="$(basename "$source_file")"
+
+    # Copy to .chezmoitemplates
+    local template_name="$filename"
+    local template_dest="${TEMPLATES_DIR}/${template_name}"
+
+    mkdir -p "$(dirname "$template_dest")"
+    cp "$source_file" "$template_dest"
+    success "Template created: .chezmoitemplates/${template_name}"
+
+    # Create chezmoi source files for each destination
+    for dest in "${destinations[@]}"; do
+        local chezmoi_rel
+        chezmoi_rel="$(target_to_chezmoi_path "$dest")"
+        local tmpl_file
+        tmpl_file="$(make_tmpl_path "$chezmoi_rel")"
+        local full_path="${CHEZMOI_SOURCE_DIR}/${tmpl_file}"
+
+        mkdir -p "$(dirname "$full_path")"
+        echo "{{ template \"${template_name}\" . }}" > "$full_path"
+        success "Source file created: home/${tmpl_file}"
+    done
+}
+
+process_directory() {
+    local source_dir="$1"
+    shift
+    local destinations=("$@")
+
+    # Use the directory basename as group name in templates
+    local group_name
+    group_name="$(basename "$source_dir")"
+
+    # Find all files in the directory
+    local files=()
+    while IFS= read -r -d '' file; do
+        files+=("$file")
+    done < <(find "$source_dir" -type f -print0)
+
+    if [[ ${#files[@]} -eq 0 ]]; then
+        die "No files found in directory: $source_dir"
+    fi
+
+    info "Found ${#files[@]} file(s) in ${source_dir}:"
+    for f in "${files[@]}"; do
+        echo "  $(realpath --relative-to="$source_dir" "$f" 2>/dev/null || echo "$f")"
+    done
+    echo ""
+
+    for file in "${files[@]}"; do
+        # Get path relative to the source directory
+        local rel_file
+        rel_file="$(realpath --relative-to="$source_dir" "$file" 2>/dev/null)"
+        if [[ -z "$rel_file" ]]; then
+            # Fallback for systems without realpath --relative-to
+            rel_file="${file#${source_dir}/}"
+        fi
+
+        local template_name="${group_name}/${rel_file}"
+        local template_dest="${TEMPLATES_DIR}/${template_name}"
+
+        # Copy to .chezmoitemplates/groupname/...
+        mkdir -p "$(dirname "$template_dest")"
+        cp "$file" "$template_dest"
+        success "Template: .chezmoitemplates/${template_name}"
+
+        # Create chezmoi source files at each destination
+        for dest in "${destinations[@]}"; do
+            # For directories, the destination is the parent dir.
+            # Append the relative file path to it.
+            local full_dest="${dest%/}/${rel_file}"
+            local chezmoi_rel
+            chezmoi_rel="$(target_to_chezmoi_path "$full_dest")"
+            local tmpl_file
+            tmpl_file="$(make_tmpl_path "$chezmoi_rel")"
+            local full_path="${CHEZMOI_SOURCE_DIR}/${tmpl_file}"
+
+            mkdir -p "$(dirname "$full_path")"
+            echo "{{ template \"${template_name}\" . }}" > "$full_path"
+            success "Source: home/${tmpl_file}"
+        done
+    done
+}
 
 usage() {
-  cat <<'EOF'
+    cat <<'EOF'
+chezmoi-template-helper: Create chezmoi template files from configs
+
 Usage:
-  create_template.sh [OPTIONS] <source_path> <templates_dest_dir> <target_dir1> [target_dir2 ...]
+  ./chezmoi-template.sh <file-or-directory>
+  ./chezmoi-template.sh                      (interactive mode)
 
-Arguments:
-  source_path          File or directory on your OS to import (e.g. /tmp/starter or /path/to/config.lua)
-  templates_dest_dir   Where to copy it under your chezmoi source state (under home/),
-                       e.g. .chezmoitemplates/neovim (will be prefixed with home/)
-  target_dirN          One or more chezmoi source-state directories where
-                       wrappers should be created (under home/),
-                       e.g. dot_config/nvim AppData/Local/nvim (will be prefixed with home/)
-
-Options:
-  -h, --help           Show this help message
-  -n, --dry-run        Show what would be done without making any changes
-  -v, --verbose        Print each file as it is created or skipped
-  -f, --force          Overwrite existing wrapper .tmpl files
-  --skip PATTERN       Additional path patterns (relative to source_path)
-                       to skip. Can be repeated.
+This script will:
+  1. Copy your config file(s) into home/.chezmoitemplates/
+  2. Ask where the config lives on your target systems
+  3. Create chezmoi .tmpl source files that reference the template
 
 Examples:
-  ./create_template.sh /tmp/starter .chezmoitemplates/neovim dot_config/nvim AppData/Local/nvim
-  ./create_template.sh --force --skip '.git' --skip 'lazy-lock.json' /tmp/starter .chezmoitemplates/neovim dot_config/nvim
-  ./create_template.sh --dry-run -v /tmp/starter .chezmoitemplates/neovim dot_config/nvim
-  ./create_template.sh /path/to/config.lua .chezmoitemplates/lua-config dot_config/lua/config.lua
+  ./chezmoi-template.sh ~/.config/topgrade/topgrade.toml
+  ./chezmoi-template.sh ~/.config/nushell/
 EOF
 }
 
-# --- Argument parsing ---
+main() {
+    detect_source_dir
+    info "Chezmoi source dir: ${CHEZMOI_SOURCE_DIR}"
+    info "Templates dir: ${TEMPLATES_DIR}"
+    echo ""
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -h|--help)    usage; exit 0 ;;
-    -f|--force)   force=1; shift ;;
-    -n|--dry-run) dry_run=1; shift ;;
-    -v|--verbose) verbose=1; shift ;;
-    --skip)
-      [[ $# -ge 2 ]] || { log_error "--skip requires a pattern"; exit 2; }
-      skip_patterns+=("$2")
-      shift 2
-      ;;
-    --)  shift; break ;;
-    -*)
-      log_error "Unknown option: $1"
-      usage >&2
-      exit 2
-      ;;
-    *)   break ;;
-  esac
-done
+    local input_path=""
 
-[[ $# -ge 3 ]] || { usage >&2; exit 2; }
-
-src_path="$1"
-templates_dest="$2"
-shift 2
-targets=("$@")
-
-# Prepend 'home/' if not present, assuming .chezmoiroot is home
-if [[ "$templates_dest" != home/* ]]; then
-  templates_dest="home/$templates_dest"
-fi
-for i in "${!targets[@]}"; do
-  if [[ "${targets[i]}" != home/* ]]; then
-    targets[i]="home/${targets[i]}"
-  fi
-done
-
-# --- Validate bash version ---
-
-if (( BASH_VERSINFO[0] < 4 )); then
-  log_error "This script requires bash 4+. You have bash $BASH_VERSION."
-  exit 1
-fi
-
-# --- Validate inputs ---
-
-[[ -e "$src_path" ]] || { log_error "source_path does not exist: $src_path"; exit 2; }
-is_file=0
-src_basename=""
-if [[ -f "$src_path" ]]; then
-  is_file=1
-  src_basename="$(basename "$src_path")"
-elif [[ ! -d "$src_path" ]]; then
-  log_error "source_path is neither a file nor a directory: $src_path"
-  exit 2
-fi
-
-# Catch common mistake: running from wrong directory
-if [[ "$templates_dest" == home/* ]]; then
-  [[ -d "home" ]] || {
-    log_error "'home/' directory not found. Run 'chezmoi cd' then re-run this script."
-    exit 2
-  }
-fi
-
-# --- Derive template prefix ---
-# templates_dest = "home/.chezmoitemplates/neovim" => prefix = "neovim"
-# templates_dest = ".chezmoitemplates/my/nested"   => prefix = "my/nested"
-# We strip everything up to and including ".chezmoitemplates/".
-
-templates_prefix="$templates_dest"
-templates_prefix="${templates_prefix#home/}"
-# Strip ".chezmoitemplates/" prefix (handles with or without leading path)
-if [[ "$templates_prefix" == *".chezmoitemplates/"* ]]; then
-  templates_prefix="${templates_prefix##*.chezmoitemplates/}"
-elif [[ "$templates_prefix" == ".chezmoitemplates" ]]; then
-  log_error "templates_dest_dir must include a subdirectory under .chezmoitemplates (e.g. .chezmoitemplates/neovim)"
-  exit 2
-fi
-
-[[ -n "$templates_prefix" ]] || {
-  log_error "Could not derive template prefix from templates_dest: $templates_dest"
-  exit 2
-}
-
-log_verb "Derived template prefix: $templates_prefix"
-
-# --- Dry-run banner ---
-
-if (( dry_run )); then
-  log_info "${BOLD}DRY RUN${RESET} — no files will be created or modified"
-  echo
-fi
-
-# --- Copy source tree into .chezmoitemplates/<prefix> ---
-
-log_info "Copying canonical content into: ${BOLD}$templates_dest${RESET}"
-
-if (( ! dry_run )); then
-  mkdir -p "$templates_dest"
-  created_dirs+=("$templates_dest")
-fi
-
-if (( is_file )); then
-  # For single file
-  src_basename="$(basename "$src_path")"
-  dest_file="$templates_dest/$src_basename"
-  if (( dry_run )); then
-    log_verb "Would copy $src_path to $dest_file"
-  else
-    cp "$src_path" "$dest_file"
-  fi
-else
-  # For directory
-  (
-    cd "$src_path"
-
-    # Build tar exclude args
-    tar_excludes=()
-    for pat in "${skip_patterns[@]}"; do
-      tar_excludes+=("--exclude=$pat")
-    done
-
-    if (( dry_run )); then
-      log_verb "Would copy from $src_path (excluding: ${skip_patterns[*]})"
+    if [[ $# -ge 1 ]]; then
+        if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+            usage
+            exit 0
+        fi
+        input_path="$1"
     else
-      # shellcheck disable=SC2068
-      tar cf - "${tar_excludes[@]}" . \
-        | (cd "$OLDPWD/$templates_dest" && tar xf -)
+        prompt "Path to file or directory to templatize:"
+        read -r input_path
     fi
-  )
-fi
 
-# --- Discover files to wrap ---
+    # Expand ~ if present
+    input_path="${input_path/#\~/$HOME}"
 
-if (( dry_run )); then
-  # In dry-run mode, enumerate from source (since dest wasn't populated)
-  source_for_listing="$src_path"
-else
-  source_for_listing="$templates_dest"
-fi
+    if [[ ! -e "$input_path" ]]; then
+        die "Path does not exist: $input_path"
+    fi
 
-if (( is_file )); then
-  # For single file
-  if (( dry_run )); then
-    rel_files=("$src_basename")
-  else
-    rel_files=("$src_basename")
-  fi
-else
-  # For directory
-  # Build find exclusions
-  find_excludes=()
-  for pat in "${skip_patterns[@]}"; do
-    find_excludes+=(-path "./$pat" -prune -o)
-  done
+    echo ""
 
-  mapfile -t rel_files < <(
-    cd "$source_for_listing" && find . "${find_excludes[@]}" -type f -print | sed 's|^\./||' | sort
-  )
-fi
+    # Collect destinations
+    local destinations=()
+    while IFS= read -r line; do
+        destinations+=("$line")
+    done < <(collect_destinations)
 
-if [[ ${#rel_files[@]} -eq 0 ]]; then
-  log_error "No files found after copy in: $templates_dest"
-  exit 1
-fi
+    echo ""
+    info "Summary:"
+    echo "  Input: $input_path"
+    echo "  Destinations:"
+    for d in "${destinations[@]}"; do
+        echo "    - $d"
+    done
+    echo ""
 
-log_verb "Found ${#rel_files[@]} file(s) to generate wrappers for"
+    prompt "Proceed? [Y/n]:"
+    local confirm
+    read -r confirm
+    confirm="${confirm:-Y}"
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        die "Aborted."
+    fi
 
-# --- Generate wrapper templates ---
+    echo ""
+    mkdir -p "$TEMPLATES_DIR"
 
-log_info "Generating wrapper templates in: ${BOLD}${targets[*]}${RESET}"
+    if [[ -f "$input_path" ]]; then
+        process_single_file "$input_path" "${destinations[@]}"
+    elif [[ -d "$input_path" ]]; then
+        process_directory "$input_path" "${destinations[@]}"
+    else
+        die "Input is neither a file nor a directory: $input_path"
+    fi
 
-skipped_count=0
-created_count=0
-overwritten_count=0
-
-create_wrapper_for_target() {
-  local target_root="$1"
-  local rel="$2"
-
-  local wrapper_path
-  if (( is_file )); then
-    wrapper_path="$target_root.tmpl"
-  else
-    wrapper_path="$target_root/$rel.tmpl"
-  fi
-  local wrapper_dir
-  wrapper_dir="$(dirname "$wrapper_path")"
-
-  # Template path uses forward slashes (Go template convention)
-  local tpl_path="$templates_prefix/$rel"
-
-  if [[ -e "$wrapper_path" && $force -ne 1 ]]; then
-    log_verb "${YELLOW}SKIP${RESET} $wrapper_path (exists; use --force to overwrite)"
-    (( skipped_count++ )) || true
-    return 0
-  fi
-
-  if [[ -e "$wrapper_path" ]]; then
-    log_verb "${YELLOW}OVERWRITE${RESET} $wrapper_path"
-    (( overwritten_count++ )) || true
-  else
-    log_verb "${GREEN}CREATE${RESET} $wrapper_path"
-    (( created_count++ )) || true
-  fi
-
-  if (( ! dry_run )); then
-    mkdir -p "$wrapper_dir"
-    cat > "$wrapper_path" <<TMPL
-{{- template "$tpl_path" . -}}
-TMPL
-  fi
+    echo ""
+    success "Done! Review the generated files and adjust templates as needed."
+    info "You can now add chezmoi template logic ({{ if eq .chezmoi.os ... }}) to files in .chezmoitemplates/"
 }
 
-for t in "${targets[@]}"; do
-  if (( ! dry_run )); then
-    mkdir -p "$t"
-    created_dirs+=("$t")
-  fi
-  for rel in "${rel_files[@]}"; do
-    create_wrapper_for_target "$t" "$rel"
-  done
-done
-
-# --- Summary ---
-
-echo
-log_ok "${BOLD}Done.${RESET}"
-echo
-echo "${BOLD}Summary:${RESET}"
-echo "  Canonical templates: $templates_dest"
-echo "  Template prefix:     $templates_prefix"
-echo "  Source files:         ${#rel_files[@]}"
-echo "  Wrappers created:    $created_count"
-echo "  Wrappers overwritten: $overwritten_count"
-echo "  Wrappers skipped:    $skipped_count"
-echo "  Wrapper targets:"
-for t in "${targets[@]}"; do
-  echo "    - $t"
-done
-echo
-
-if (( dry_run )); then
-  echo "${BOLD}This was a dry run.${RESET} Re-run without --dry-run to apply."
-else
-  echo "${BOLD}Next steps:${RESET}"
-  echo "  1) git status    — review new files"
-  echo "  2) chezmoi diff  — see what would apply"
-  echo "  3) chezmoi apply — deploy to your home directory"
-fi
+main "$@"
