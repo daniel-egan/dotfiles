@@ -18,6 +18,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply daniel-egan --ssh --branch 
 - `chezmoi edit` to open the dotfiles config in VS Code
 - `chezmoi edit-config` if you typed in one of the prompts wrong
 - `chezmoi ignored` to check if you have correctly ignored a folder
+- `chezmoi update` to pull and apply from the latest remote
 
 ## Creating new dotfile
 
