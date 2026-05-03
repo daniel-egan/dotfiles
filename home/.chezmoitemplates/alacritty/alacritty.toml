@@ -102,7 +102,6 @@ size = 17
 
 # Window settings
 [window]
-opacity = 0.92
 blur = true
 decorations = "None"
 startup_mode = "Maximized"
@@ -114,5 +113,5 @@ y = 6
 # Shell (Nushell)
 # Adjust the path if your Nushell is installed elsewhere
 # Find it with: which nu
-[terminal.shell]
+[shell]
 program = '{{ if eq .chezmoi.os "windows" }}nu.exe{{ else }}/home/linuxbrew/.linuxbrew/bin/nu{{ end }}'
