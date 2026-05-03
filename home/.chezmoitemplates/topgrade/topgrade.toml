@@ -14,7 +14,7 @@ first = ["chezmoi"]
 last = ["flatpak"]
 
 # Ignore failures for noisy or unreliable steps
-ignore_failures = ["pip3"]
+ignore_failures = ["pip3", "containers"]
 
 # Clean up old temp files after a run
 cleanup = true
