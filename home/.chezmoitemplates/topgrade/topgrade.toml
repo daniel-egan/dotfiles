@@ -50,5 +50,6 @@ enable_pip_review = true
 upgrade = false
 
 [containers]
+ignored_containers = ["*"]
 # Run 'docker system prune' to clean up unused containers, networks, and build cache
 system_prune = true
