@@ -5,7 +5,7 @@ sudo_loop = true
 sudo_loop_interval = 30
 
 # Steps to always skip
-# disable = []
+disable = ["ollama"]
 
 # Steps to run before all others
 first = ["chezmoi"]
