@@ -11,7 +11,7 @@ disable = ["ollama"]
 first = ["chezmoi"]
 
 # Steps to run after all others
-last = ["flatpak"]
+# last = ["flatpak"]
 
 # Ignore failures for noisy or unreliable steps
 ignore_failures = ["pip3", "containers"]
