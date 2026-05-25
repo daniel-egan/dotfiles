@@ -39,7 +39,7 @@ yay_arguments = "--nodevel"
 
 [flatpak]
 # Update system-wide Flatpak installs (requires sudo)
-use_sudo = true
+use_sudo = false
 
 [python]
 # Update pip packages (disabled by default)
