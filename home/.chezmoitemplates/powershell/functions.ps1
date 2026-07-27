@@ -36,3 +36,8 @@ Set-PSReadLineKeyHandler -Chord "!" -ScriptBlock {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert('!')
     }
 }
+
+# History search with arrow keys
+# Type a partial command (e.g., "wh") then press Up/Down to cycle through matches
+Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
