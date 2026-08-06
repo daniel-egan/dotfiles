@@ -2,4 +2,5 @@
 . "$PSScriptRoot\aliases.ps1"
 . "$PSScriptRoot\functions.ps1"
 . "$PSScriptRoot\init.ps1"
-. "$PSScriptRoot/path.ps1"
+. "$PSScriptRoot\path.ps1"
+. "$PSScriptRoot\configs.ps1"
