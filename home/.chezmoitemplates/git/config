@@ -2,6 +2,9 @@
 email = {{ .email }}
 name = {{ .name }}
 
+[core]
+hooksPath = {{ .chezmoi.homeDir }}/.config/git/hooks
+
 [column]
 ui = auto
 

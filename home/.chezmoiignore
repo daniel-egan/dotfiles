@@ -7,7 +7,8 @@ AppData/
 ProgramData/
 {{ end }}
 
-# Ignore Linux paths on Windows
+# Ignore Linux paths on Windows (git is needed on both OSes, so it's excluded)
 {{ if ne .chezmoi.os "linux" }}
 dot_config/
+!dot_config/git/
 {{ end }}

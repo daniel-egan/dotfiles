@@ -1,0 +1,8 @@
+#!bin/sh
+# Managed by chezmoi. Blocks commits containing secrets detected by betterleaks
+if ! command -v betterleaks >/dev/null 2>&1; then
+    echo "pre-commit: betterleaks not found in PATH." >&2
+    exit 1
+fi
+
+betterleaks git . --pre-commit --staged
