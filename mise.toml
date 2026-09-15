@@ -1,0 +1,5 @@
+[dotfiles]
+"powershell/init.ps1" = { source = "dotfiles/powershell/init.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/init.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/init.ps1" },
+] }
