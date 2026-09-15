@@ -1,12 +1,6 @@
 # Dotfiles managed by mise
 
 This repository contains the mise configuration for setting up my machines.
-The configuration currently declares:
-
-- a PowerShell initialization file under `dotfiles/powershell/init.ps1`
-- PowerShell `7.6.6` under `[tools]`
-- zoxide `0.10.0` under `[tools]`
-- no host packages under `[bootstrap.packages]` yet
 
 `mise.toml` is the configuration file. Files that mise deploys live under
 `dotfiles/` and are the canonical sources.
@@ -30,6 +24,15 @@ If the repository is already cloned, run this from its root instead:
 mise trust && mise bootstrap --yes
 ```
 
+The committed `mise.lock` file pins each declared tool to an exact version,
+download URL, and checksum for supported platforms. Bootstrap and install use
+the lockfile, so machines do not independently resolve different releases.
+Refresh it after intentionally changing a tool version:
+
+```bash
+mise lock
+```
+
 The installed CLI spells dotfile commands as `mise dotfiles`.
 
 ## Add a global tool
@@ -37,22 +40,31 @@ The installed CLI spells dotfile commands as `mise dotfiles`.
 Add a tool to this repository with `mise use`, using a concrete version:
 
 ```bash
-mise use --path mise.toml --pin ripgrep@14
+mise use --pin ripgrep@14
 ```
 
-This updates `[tools]` and installs the tool on the current machine. The
-version request can be changed to the version you want to support. Review the
-TOML change, commit it, and future machines will install the same version
-when they bootstrap.
+When run from the repository root, `mise use` implicitly updates the project
+`mise.toml` and installs the tool on the current machine. `--path mise.toml`
+is optional there; use it when running from another directory or when you want
+to make the target explicit.
+
+This updates `[tools]`. The version request can be changed to the version you
+want to support. Then refresh the lockfile, review both changes, and commit
+them so future machines install the same locked release:
+
+```bash
+mise lock
+```
 
 To add several tools, include them in one command:
 
 ```bash
-mise use --path mise.toml --pin git@2.51.0 fd@10.2.0
+mise use --pin git@2.51.0 fd@10.2.0
 ```
 
-Use `mise use --path mise.toml --pin --dry-run tool@version` first if you want
-to preview the change without installing or editing anything.
+Use `mise use --pin --dry-run tool@version` first if you want to preview the
+change without installing or editing anything. Use `mise lock --dry-run` to
+preview lockfile changes.
 
 ## Add an application config file
 
@@ -61,7 +73,7 @@ to preview the change without installing or editing anything.
 2. Add it with the Mise CLI, selecting the target path and deployment mode:
 
    ```bash
-   mise dotfiles add --path mise.toml --mode copy --no-apply \
+   mise dotfiles add --mode copy --no-apply \
      --source dotfiles/git/config ~/.config/git/config
    ```
 
@@ -80,21 +92,17 @@ to preview the change without installing or editing anything.
 unless `--source` points to a source you already created. Use `--no-apply` so
 adding an entry does not immediately overwrite the live target.
 
-For a platform-specific entry, keep one source and add destination variants
-to the generated entry:
+For a platform-specific entry, keep one source and add destination variants to
+the generated entry. This repository uses an inline array for variants:
 
 ```toml
 [dotfiles."app/config"]
 source = "dotfiles/app/config"
 mode = "copy"
-
-[[dotfiles."app/config".variants]]
-os = "linux"
-target = "~/.config/app/config"
-
-[[dotfiles."app/config".variants]]
-os = "windows"
-target = "~/Documents/app/config"
+variants = [
+  { os = "linux", target = "~/.config/app/config" },
+  { os = "windows", target = "~/Documents/app/config" },
+]
 ```
 
 ## Choosing a mode
