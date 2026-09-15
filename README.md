@@ -1,111 +1,113 @@
 # Dotfiles managed by mise
 
-This repository is a minimal starting point for managing a machine with mise.
-The main configuration file is `mise.toml`. It can declare:
+This repository contains the mise configuration for setting up my machines.
+The configuration currently declares:
 
-- dotfiles and their deployment targets
-- tools that mise should install
-- host packages managed by supported package managers
-- bootstrap behavior for putting a machine into the desired state
+- a PowerShell initialization file under `dotfiles/powershell/init.ps1`
+- PowerShell `7.6.6` under `[tools]`
+- zoxide `0.10.0` under `[tools]`
+- no host packages under `[bootstrap.packages]` yet
 
-The repository currently contains one dotfile entry and two tool declarations.
-The PowerShell initialization file is a small example:
+`mise.toml` is the configuration file. Files that mise deploys live under
+`dotfiles/` and are the canonical sources.
 
-```text
-.
-|-- mise.toml
-`-- dotfiles/
-    `-- powershell/
-        `-- init.ps1
-```
+## New machine
 
-The file under `dotfiles/` is the canonical source. The current `[dotfiles]`
-entry copies it to a platform-specific destination. Future entries can add
-other files without changing this source layout.
-
-## Platform variants
-
-An entry can use `variants` to select a destination for the current operating
-system. For example, one source can target:
-
-| Platform | Example destination |
-| --- | --- |
-| Linux | `~/.config/example/config` |
-| Windows | `~/Documents/example/config` |
-
-The most specific matching variant is selected. Keep a default variant or
-otherwise ensure that each supported platform has an intentional destination.
-The current configuration uses Linux and Windows variants for the PowerShell
-example.
-
-## Modes
-
-Dotfiles can use different deployment modes:
-
-- `copy` writes a regular file at the target. This is the current mode and is
-  useful when the target should not depend on link support.
-- `symlink` links the target to the source. This can be useful when edits at
-  the target should update the repository source directly.
-- `template` renders a source before deployment. Use it when content depends
-  on platform or other Mise template data.
-
-Choose the mode per entry and review the effect before applying it.
-
-## Prerequisites and declarations
-
-Install mise and make it available on `PATH`. The current `[tools]` table
-declares pinned PowerShell and zoxide versions, so mise can install those
-tools. No host packages are currently declared under `[bootstrap.packages]`.
-
-When needed, add more tools under `[tools]`; mise can then install those
-declared tools. Add host package declarations under `[bootstrap.packages]` when
-a supported package manager should install system dependencies. Do not assume a
-tool or package is installed until its declaration and installation has been
-verified.
-
-## Safe workflow
-
-The installed CLI uses `mise dotfiles` for dotfile operations:
+Install mise first, then run this from the machine you want to set up:
 
 ```bash
-# Review the configuration before trusting it.
-mise trust
-mise config get --file mise.toml
-
-# Inspect the selected entries and planned changes.
-mise dotfiles status
-mise dotfiles diff
-mise dotfiles apply --dry-run
-
-# Apply only after reviewing the dry-run output.
-mise dotfiles apply
+mise bootstrap --from https://github.com/daniel-egan/dotfiles.git --yes
 ```
 
-`mise dotfiles apply` changes live target files. Use the dry run first,
-especially when a target already exists. On a new machine, clone the
-repository, review `mise.toml`, trust it, inspect status and diff, and run the
-dry run before applying.
+This clones the repository and bootstraps the declared tools and dotfiles
+without requiring an interactive review. It applies the current configuration
+to the machine, so use the repository branch or commit that contains the
+desired setup.
 
-## Bootstrap workflow
-
-As this repository grows, `mise bootstrap` can coordinate the declared
-machine state, including packages, tools, repositories, dotfiles, and other
-configured resources. Preview the complete bootstrap plan before applying it:
+If the repository is already cloned, run this from its root instead:
 
 ```bash
-mise bootstrap status
-mise bootstrap --dry-run
-mise bootstrap --only dotfiles --dry-run
+mise trust && mise bootstrap --yes
 ```
 
-When the plan is understood, apply the selected scope:
+The installed CLI spells dotfile commands as `mise dotfiles`.
+
+## Add a global tool
+
+Add a tool to this repository with `mise use`, using a concrete version:
 
 ```bash
-mise bootstrap --only dotfiles
-mise bootstrap
+mise use --path mise.toml --pin ripgrep@14
 ```
 
-The current configuration has `[tools]` declarations but no
-`[bootstrap.packages]` declarations. Bootstrap can therefore install the
-declared tools when that phase is selected, while host package installation
-remains a future configuration change.
+This updates `[tools]` and installs the tool on the current machine. The
+version request can be changed to the version you want to support. Review the
+TOML change, commit it, and future machines will install the same version
+when they bootstrap.
+
+To add several tools, include them in one command:
+
+```bash
+mise use --path mise.toml --pin git@2.51.0 fd@10.2.0
+```
+
+Use `mise use --path mise.toml --pin --dry-run tool@version` first if you want
+to preview the change without installing or editing anything.
+
+## Add an application config file
+
+1. Create the canonical source under `dotfiles/`, for example
+   `dotfiles/git/config`.
+2. Add it with the Mise CLI, selecting the target path and deployment mode:
+
+   ```bash
+   mise dotfiles add --path mise.toml --mode copy --no-apply \
+     --source dotfiles/git/config ~/.config/git/config
+   ```
+
+3. Check the generated `[dotfiles]` entry. Add `variants` when Linux and
+   Windows need different target paths.
+4. Preview the deployment, then apply it:
+
+   ```bash
+   mise dotfiles status
+   mise dotfiles diff
+   mise dotfiles apply --dry-run
+   mise dotfiles apply
+   ```
+
+`mise dotfiles add` copies the existing target into the canonical source
+unless `--source` points to a source you already created. Use `--no-apply` so
+adding an entry does not immediately overwrite the live target.
+
+For a platform-specific entry, keep one source and add destination variants
+to the generated entry:
+
+```toml
+[dotfiles."app/config"]
+source = "dotfiles/app/config"
+mode = "copy"
+
+[[dotfiles."app/config".variants]]
+os = "linux"
+target = "~/.config/app/config"
+
+[[dotfiles."app/config".variants]]
+os = "windows"
+target = "~/Documents/app/config"
+```
+
+## Choosing a mode
+
+- `copy`: use this when the repository is the source of truth and the
+  application should receive a normal file. This is the default choice for
+  application config files and works without relying on filesystem links.
+- `symlink`: use this when edits made through the deployed path should edit
+  the repository source directly and symlinks are suitable on every target
+  platform.
+- `template`: use this when the file content must be rendered from Mise
+  template data. Choose this for content differences, not merely different
+  destination paths; use `variants` for destination-only differences.
+
+When unsure, start with `copy`, use `--no-apply`, and review
+`mise dotfiles diff` and `mise dotfiles apply --dry-run` before applying.
