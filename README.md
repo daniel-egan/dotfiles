@@ -1,64 +1,100 @@
-My custom dotfiles
+# PowerShell dotfiles managed by mise
 
-# Apps
+This repository is a minimal mise-based dotfiles configuration. It currently
+manages one PowerShell initialization file:
 
-- Nushell
-- Neovim
-
-# Usage
-
-## Initialise
-
-```
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply daniel-egan --ssh --branch chezmoi
+```text
+.
+├── mise.toml
+└── dotfiles/
+    └── powershell/
+        └── init.ps1
 ```
 
-## Common Commands
+`dotfiles/powershell/init.ps1` is the canonical source. It initializes
+zoxide and activates mise in PowerShell:
 
-- `chezmoi edit` to open the dotfiles config in VS Code
-- `chezmoi edit-config` if you typed in one of the prompts wrong
-- `chezmoi ignored` to check if you have correctly ignored a folder
-- `chezmoi update` to pull and apply from the latest remote
+```powershell
+# Initialize Zoxide
+Invoke-Expression (& { (zoxide init powershell --cmd cd | Out-String) })
 
-## Creating new dotfile
+# Mise-en-place
+(&mise activate pwsh) | Out-String | Invoke-Expression
+```
 
-1. Use `chezmoi edit` to open the dotfiles folder
-1. Create the folder structure in the `.chezmoitemplates` directory following how it would look within the config sources
-    1. The .tmpl extension is optional within this folder
-1. Create the template within the `AppData`/`ProgramData`/`dot_config` folder
-    1. This must have the `.tmpl` file ending
-    1. Make the contents `{{- template "{TEMPLATE_FILE_PATH_HERE}" . -}}` replacing with the location within the `.chezmoitemplates` folder
-1. Run `chezmoi apply`
-1. If happy with the new dotfiles, run `chezmoi git push`
+## Platform destinations
 
-# Fonts
+`mise.toml` has one `[dotfiles]` entry with platform-specific destination
+variants:
 
-Currently using `NotoSansM Nerd Font Mono`
+| Platform | Destination |
+| --- | --- |
+| Linux | `~/.config/powershell/init.ps1` |
+| Windows | `~/Documents/Powershell/init.ps1` |
 
-- `brew install --cask font-noto-nerd-font`
+The entry uses `mode = "copy"` because PowerShell should receive a regular
+configuration file at its platform-specific path while the repository remains
+the source of truth. `symlink` would make the deployed file dependent on link
+support and link semantics, especially on Windows. `template` is unnecessary
+for this first entry because the content does not vary by platform; only the
+destination does.
 
-# Scripts
+## Prerequisites
 
-## create_template.sh
+Install:
 
-This script imports canonical directory trees or single files into chezmoi templates, creating wrapper .tmpl files in target directories.
+- [mise](https://mise.jdx.dev/)
+- PowerShell
+- zoxide, if the zoxide initialization line is retained
 
-### Examples
+The `mise` executable must be available on `PATH` when PowerShell starts.
+
+## Commands
+
+The CLI spelling used by this repository and the installed mise version is
+`mise dotfiles` (not `mise dot`).
+
+From the repository root:
 
 ```bash
-# Import a directory (e.g., LazyVim starter)
-./scripts/create_template.sh /tmp/starter .chezmoitemplates/neovim dot_config/nvim AppData/Local/nvim
+# Trust this repository's mise.toml after reviewing it.
+mise trust
 
-# Import a single file
-./scripts/create_template.sh /path/to/config.lua .chezmoitemplates/lua-config dot_config/lua/config.lua
+# Inspect managed entries and their current state.
+mise dotfiles status
 
-# Dry run to see what would happen
-./scripts/create_template.sh --dry-run /tmp/starter .chezmoitemplates/neovim dot_config/nvim
+# Preview the content changes.
+mise dotfiles diff
 
-# Force overwrite existing wrappers
-./scripts/create_template.sh --force /tmp/starter .chezmoitemplates/neovim dot_config/nvim
+# Preview the copy without changing the live home directory.
+mise dotfiles apply --dry-run
+
+# Apply the configured file to the selected platform destination.
+mise dotfiles apply
 ```
 
-# Development
+`mise dotfiles apply` changes the live destination. Review `status`, `diff`,
+and the dry run first, particularly when a destination already exists.
 
-Scan folder for secrets with `gitleaks git -v .`
+## Validation note
+
+The migration was validated on Linux by parsing `mise.toml` and running the
+Linux `status`, `diff`, and dry-run commands. The Windows destination variant
+was checked in the parsed configuration, but Windows runtime deployment was
+not tested on the Linux runner.
+
+## New machine setup
+
+1. Install mise, PowerShell, and zoxide.
+1. Clone this repository and change to its root.
+1. Review `mise.toml` and run `mise trust`.
+1. Run `mise dotfiles status`, `mise dotfiles diff`, and
+   `mise dotfiles apply --dry-run`.
+1. Run `mise dotfiles apply` when the planned destination and overwrite
+   behavior are acceptable.
+1. Start PowerShell and verify that `zoxide` and `mise` are available.
+
+This repository currently contains only the PowerShell entry. Additional
+dotfiles should be added as separate canonical sources and explicit
+`[dotfiles]` entries after their destinations and deployment mode have been
+reviewed.
