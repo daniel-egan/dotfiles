@@ -3,6 +3,10 @@
   { os = "linux", target = "~/.config/powershell/init.ps1" },
   { os = "windows", target = "~/Documents/Powershell/init.ps1" },
 ] }
+"powershell/Microsoft.PowerShell_profile.ps1" = { source = "dotfiles/powershell/Microsoft.PowerShell_profile.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/Microsoft.PowerShell_profile.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/Microsoft.PowerShell_profile.ps1" },
+] }
 
 [tools]
 powershell = "7.6.6"
