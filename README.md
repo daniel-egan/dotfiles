@@ -8,8 +8,8 @@ The main configuration file is `mise.toml`. It can declare:
 - host packages managed by supported package managers
 - bootstrap behavior for putting a machine into the desired state
 
-Only the first item is configured currently. The repository contains one
-PowerShell initialization file as a small example:
+The repository currently contains one dotfile entry and two tool declarations.
+The PowerShell initialization file is a small example:
 
 ```text
 .
@@ -53,14 +53,14 @@ Choose the mode per entry and review the effect before applying it.
 
 ## Prerequisites and declarations
 
-Install mise and make it available on `PATH`. The current repository does not
-declare any tools or host packages, so it does not currently install
-PowerShell, zoxide, or any other package automatically.
+Install mise and make it available on `PATH`. The current `[tools]` table
+declares pinned PowerShell and zoxide versions, so mise can install those
+tools. No host packages are currently declared under `[bootstrap.packages]`.
 
-When needed, add tools under `[tools]`; mise can then install those declared
-tools. Add host package declarations under `[bootstrap.packages]` when a
-supported package manager should install system dependencies. Do not assume a
-tool or package is installed until its declaration and installation have been
+When needed, add more tools under `[tools]`; mise can then install those
+declared tools. Add host package declarations under `[bootstrap.packages]` when
+a supported package manager should install system dependencies. Do not assume a
+tool or package is installed until its declaration and installation has been
 verified.
 
 ## Safe workflow
@@ -105,6 +105,7 @@ mise bootstrap --only dotfiles
 mise bootstrap
 ```
 
-The current configuration has no `[tools]` or `[bootstrap.packages]`
-declarations, so bootstrap is currently limited to resources that are added
-in future configuration changes.
+The current configuration has `[tools]` declarations but no
+`[bootstrap.packages]` declarations. Bootstrap can therefore install the
+declared tools when that phase is selected, while host package installation
+remains a future configuration change.
