@@ -120,8 +120,23 @@ variants = [
   destination paths; use `variants` for destination-only differences.
 
 The Git config remains `template` because it contains Mise template
-expressions. Edit its canonical source under `dotfiles/git/` and render it
-with Mise rather than editing the generated target directly.
+expressions. Mise renders it when `mise dotfiles status`, `mise dotfiles diff`,
+or `mise dotfiles apply` evaluates the entry. The template reads
+`GIT_USER_NAME` and `GIT_USER_EMAIL`; if they are unset, it uses
+`daniel-egan` and `95421705+daniel-egan@users.noreply.github.com`. Set those
+variables before running Mise when a machine needs different Git identity
+values:
+
+```bash
+export GIT_USER_NAME="Your Name"
+export GIT_USER_EMAIL="you@example.com"
+mise dotfiles diff
+mise dotfiles apply --dry-run
+```
+
+Edit `dotfiles/git/config.tmpl` for structural Git configuration changes. Do
+not edit the rendered target directly, because the next Mise render replaces
+its content.
 
 Mise applies one mode to all destination `variants` for an entry. The migrated
 entries therefore use `symlink` on Linux, macOS, and Windows. Unix systems
