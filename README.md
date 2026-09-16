@@ -1,64 +1,67 @@
-My custom dotfiles
+# Dotfiles managed by mise
 
-# Apps
+This repository contains my mise configuration for tools and dotfiles. Mise
+uses `mise.toml` to install the declared tools and deploy files from
+`dotfiles/`. `mise.lock` pins tool versions for supported platforms.
 
-- Nushell
-- Neovim
+## New machine
 
-# Usage
-
-## Initialise
-
-```
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply daniel-egan --ssh --branch chezmoi
-```
-
-## Common Commands
-
-- `chezmoi edit` to open the dotfiles config in VS Code
-- `chezmoi edit-config` if you typed in one of the prompts wrong
-- `chezmoi ignored` to check if you have correctly ignored a folder
-- `chezmoi update` to pull and apply from the latest remote
-
-## Creating new dotfile
-
-1. Use `chezmoi edit` to open the dotfiles folder
-1. Create the folder structure in the `.chezmoitemplates` directory following how it would look within the config sources
-    1. The .tmpl extension is optional within this folder
-1. Create the template within the `AppData`/`ProgramData`/`dot_config` folder
-    1. This must have the `.tmpl` file ending
-    1. Make the contents `{{- template "{TEMPLATE_FILE_PATH_HERE}" . -}}` replacing with the location within the `.chezmoitemplates` folder
-1. Run `chezmoi apply`
-1. If happy with the new dotfiles, run `chezmoi git push`
-
-# Fonts
-
-Currently using `NotoSansM Nerd Font Mono`
-
-- `brew install --cask font-noto-nerd-font`
-
-# Scripts
-
-## create_template.sh
-
-This script imports canonical directory trees or single files into chezmoi templates, creating wrapper .tmpl files in target directories.
-
-### Examples
+Install mise, then run this command on the machine:
 
 ```bash
-# Import a directory (e.g., LazyVim starter)
-./scripts/create_template.sh /tmp/starter .chezmoitemplates/neovim dot_config/nvim AppData/Local/nvim
-
-# Import a single file
-./scripts/create_template.sh /path/to/config.lua .chezmoitemplates/lua-config dot_config/lua/config.lua
-
-# Dry run to see what would happen
-./scripts/create_template.sh --dry-run /tmp/starter .chezmoitemplates/neovim dot_config/nvim
-
-# Force overwrite existing wrappers
-./scripts/create_template.sh --force /tmp/starter .chezmoitemplates/neovim dot_config/nvim
+mise bootstrap --from https://github.com/daniel-egan/dotfiles.git --yes
 ```
 
-# Development
+If the repository is already cloned, run these commands from its root:
 
-Scan folder for secrets with `gitleaks git -v .`
+```bash
+mise trust
+mise bootstrap --yes
+```
+
+Review the dotfile changes before applying them:
+
+```bash
+mise dotfiles status
+mise dotfiles diff
+mise dotfiles apply --dry-run
+```
+
+`mise dotfiles diff` compares the configured files with their current targets.
+The dry run shows the actions without changing files.
+
+Apply the configuration with:
+
+```bash
+mise dotfiles apply
+```
+
+If a target already exists and is not the expected symlink, Mise stops instead
+of replacing it. To replace conflicting dotfiles during bootstrap, use:
+
+```bash
+mise bootstrap --yes --force-dotfiles
+```
+
+The repository declares the tools and dotfiles used on my machines. Add or
+change tools in `mise.toml`, then refresh the lockfile with `mise lock`.
+
+## Git identity
+
+The Git config is a Mise template. It reads `GIT_USER_NAME` and
+`GIT_USER_EMAIL` when it renders the deployed Git config. If either variable is
+unset, the template uses `daniel-egan` and
+`95421705+daniel-egan@users.noreply.github.com`.
+
+Set these variables before checking or applying the configuration when the
+machine needs a different identity:
+
+```bash
+export GIT_USER_NAME="Your Name"
+export GIT_USER_EMAIL="you@example.com"
+mise dotfiles diff
+mise dotfiles apply --dry-run
+```
+
+Edit `dotfiles/git/config.tmpl` to change the Git config template. The
+deployed Git config is generated from that template.
