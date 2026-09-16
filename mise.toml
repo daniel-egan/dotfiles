@@ -1,4 +1,8 @@
 [dotfiles]
+"topgrade/topgrade.toml" = { source = "dotfiles/topgrade/topgrade.toml", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/topgrade/topgrade.toml" },
+  { os = "windows", target = "~/AppData/Roaming/topgrade/topgrade.toml" },
+] }
 "powershell/init.ps1" = { source = "dotfiles/powershell/init.ps1", mode = "copy", variants = [
   { os = "linux", target = "~/.config/powershell/init.ps1" },
   { os = "windows", target = "~/Documents/Powershell/init.ps1" },
