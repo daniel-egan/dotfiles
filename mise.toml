@@ -1,33 +1,33 @@
 [dotfiles]
-"topgrade/topgrade.toml" = { source = "dotfiles/topgrade/topgrade.toml", mode = "copy", variants = [
+"topgrade/topgrade.toml" = { source = "dotfiles/topgrade/topgrade.toml", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/topgrade/topgrade.toml" },
   { os = "windows", target = "~/AppData/Roaming/topgrade/topgrade.toml" },
 ] }
-"powershell/Microsoft.PowerShell_profile.ps1" = { source = "dotfiles/powershell/Microsoft.PowerShell_profile.ps1", mode = "copy", variants = [
+"powershell/Microsoft.PowerShell_profile.ps1" = { source = "dotfiles/powershell/Microsoft.PowerShell_profile.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/Microsoft.PowerShell_profile.ps1" },
   { os = "windows", target = "~/Documents/Powershell/Microsoft.PowerShell_profile.ps1" },
 ] }
-"powershell/init.ps1" = { source = "dotfiles/powershell/init.ps1", mode = "copy", variants = [
+"powershell/init.ps1" = { source = "dotfiles/powershell/init.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/init.ps1" },
   { os = "windows", target = "~/Documents/Powershell/init.ps1" },
 ] }
-"powershell/aliases.ps1" = { source = "dotfiles/powershell/aliases.ps1", mode = "copy", variants = [
+"powershell/aliases.ps1" = { source = "dotfiles/powershell/aliases.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/aliases.ps1" },
   { os = "windows", target = "~/Documents/Powershell/aliases.ps1" },
 ] }
-"powershell/configs.ps1" = { source = "dotfiles/powershell/configs.ps1", mode = "copy", variants = [
+"powershell/configs.ps1" = { source = "dotfiles/powershell/configs.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/configs.ps1" },
   { os = "windows", target = "~/Documents/Powershell/configs.ps1" },
 ] }
-"powershell/env.ps1" = { source = "dotfiles/powershell/env.ps1", mode = "copy", variants = [
+"powershell/env.ps1" = { source = "dotfiles/powershell/env.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/env.ps1" },
   { os = "windows", target = "~/Documents/Powershell/env.ps1" },
 ] }
-"powershell/functions.ps1" = { source = "dotfiles/powershell/functions.ps1", mode = "copy", variants = [
+"powershell/functions.ps1" = { source = "dotfiles/powershell/functions.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/functions.ps1" },
   { os = "windows", target = "~/Documents/Powershell/functions.ps1" },
 ] }
-"powershell/path.ps1" = { source = "dotfiles/powershell/path.ps1", mode = "copy", variants = [
+"powershell/path.ps1" = { source = "dotfiles/powershell/path.ps1", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/powershell/path.ps1" },
   { os = "windows", target = "~/Documents/Powershell/path.ps1" },
 ] }
@@ -36,7 +36,7 @@
   { os = "macos", target = "~/.config/git/config" },
   { os = "windows", target = "~/.config/git/config" },
 ] }
-"git/hooks/pre-commit" = { source = "dotfiles/git/hooks/pre-commit", mode = "copy", variants = [
+"git/hooks/pre-commit" = { source = "dotfiles/git/hooks/pre-commit", mode = "symlink", variants = [
   { os = "linux", target = "~/.config/git/hooks/pre-commit" },
   { os = "macos", target = "~/.config/git/hooks/pre-commit" },
   { os = "windows", target = "~/.config/git/hooks/pre-commit" },

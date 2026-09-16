@@ -107,15 +107,31 @@ variants = [
 
 ## Choosing a mode
 
-- `copy`: use this when the repository is the source of truth and the
-  application should receive a normal file. This is the default choice for
-  application config files and works without relying on filesystem links.
+- `copy`: use this when the repository is the source of truth but the
+  application should receive a separate normal file. Changes made at the
+  deployed path are not Git-visible until they are captured back into the
+  source.
 - `symlink`: use this when edits made through the deployed path should edit
-  the repository source directly and symlinks are suitable on every target
-  platform.
+  the repository source directly. This is the mode used by the migrated
+  PowerShell, Topgrade, and Git hook files, so edits at their real paths are
+  immediately visible to Git.
 - `template`: use this when the file content must be rendered from Mise
   template data. Choose this for content differences, not merely different
   destination paths; use `variants` for destination-only differences.
 
-When unsure, start with `copy`, use `--no-apply`, and review
-`mise dotfiles diff` and `mise dotfiles apply --dry-run` before applying.
+The Git config remains `template` because it contains Mise template
+expressions. Edit its canonical source under `dotfiles/git/` and render it
+with Mise rather than editing the generated target directly.
+
+Mise applies one mode to all destination `variants` for an entry. The migrated
+entries therefore use `symlink` on Linux, macOS, and Windows. Unix systems
+normally support this directly. Windows requires Developer Mode or a user
+account with the privilege to create symbolic links. If that requirement is
+not available, do not apply the Windows entries as-is; use `copy` for those
+entries instead, accepting that target edits will need to be captured back
+into the source.
+
+When adding an entry, use `--no-apply` and review `mise dotfiles diff` and
+`mise dotfiles apply --dry-run` before applying. After a symlink entry has
+been applied, edit the deployed path normally; the change is made to the
+repository source and is immediately visible in Git.
