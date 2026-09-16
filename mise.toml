@@ -3,13 +3,34 @@
   { os = "linux", target = "~/.config/topgrade/topgrade.toml" },
   { os = "windows", target = "~/AppData/Roaming/topgrade/topgrade.toml" },
 ] }
+"powershell/Microsoft.PowerShell_profile.ps1" = { source = "dotfiles/powershell/Microsoft.PowerShell_profile.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/Microsoft.PowerShell_profile.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/Microsoft.PowerShell_profile.ps1" },
+] }
+] }
 "powershell/init.ps1" = { source = "dotfiles/powershell/init.ps1", mode = "copy", variants = [
   { os = "linux", target = "~/.config/powershell/init.ps1" },
   { os = "windows", target = "~/Documents/Powershell/init.ps1" },
 ] }
-"powershell/Microsoft.PowerShell_profile.ps1" = { source = "dotfiles/powershell/Microsoft.PowerShell_profile.ps1", mode = "copy", variants = [
-  { os = "linux", target = "~/.config/powershell/Microsoft.PowerShell_profile.ps1" },
-  { os = "windows", target = "~/Documents/Powershell/Microsoft.PowerShell_profile.ps1" },
+"powershell/aliases.ps1" = { source = "dotfiles/powershell/aliases.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/aliases.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/aliases.ps1" },
+] }
+"powershell/configs.ps1" = { source = "dotfiles/powershell/configs.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/configs.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/configs.ps1" },
+] }
+"powershell/env.ps1" = { source = "dotfiles/powershell/env.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/env.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/env.ps1" },
+] }
+"powershell/functions.ps1" = { source = "dotfiles/powershell/functions.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/functions.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/functions.ps1" },
+] }
+"powershell/path.ps1" = { source = "dotfiles/powershell/path.ps1", mode = "copy", variants = [
+  { os = "linux", target = "~/.config/powershell/path.ps1" },
+  { os = "windows", target = "~/Documents/Powershell/path.ps1" },
 ] }
 
 [tools]
