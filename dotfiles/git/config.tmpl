@@ -1,0 +1,44 @@
+[user]
+email = {{ get_env(name="GIT_USER_EMAIL", default="95421705+daniel-egan@users.noreply.github.com") }}
+name = {{ get_env(name="GIT_USER_NAME", default="daniel-egan") }}
+
+[core]
+hooksPath = ~/.config/git/hooks
+
+[column]
+ui = auto
+
+[branch]
+sort = -committerdate
+
+[tag]
+sort = version:refname
+
+[init]
+defaultBranch = main
+
+[diff]
+algorithm = histogram
+colorMoved = plain
+mnemonicPrefix = true
+renames = true
+
+[push]
+default = simple
+autoSetupRemote = true
+followTags = true
+
+[fetch]
+prune = true
+# pruneTags = true
+# all = true
+
+[help]
+autocorrect = prompt
+
+[rerere]
+enabled = true
+autoupdate = true
+
+[pull]
+rebase = false
