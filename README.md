@@ -19,18 +19,28 @@ mise trust
 mise bootstrap --yes
 ```
 
-Review the configuration before applying it:
+Review the dotfile changes before applying them:
 
 ```bash
-mise config
 mise dotfiles status
+mise dotfiles diff
 mise dotfiles apply --dry-run
 ```
+
+`mise dotfiles diff` compares the configured files with their current targets.
+The dry run shows the actions without changing files.
 
 Apply the configuration with:
 
 ```bash
 mise dotfiles apply
+```
+
+If a target already exists and is not the expected symlink, Mise stops instead
+of replacing it. To replace conflicting dotfiles during bootstrap, use:
+
+```bash
+mise bootstrap --yes --force-dotfiles
 ```
 
 The repository declares the tools and dotfiles used on my machines. Add or
