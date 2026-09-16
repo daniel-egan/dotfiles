@@ -1,0 +1,29 @@
+# ~/.config/starship.toml
+
+format = """
+[](blue)$directory[](blue)
+$character"""
+
+right_format = """$status$cmd_duration"""
+
+[directory]
+style = "blue"
+truncate_to_repo = false
+home_symbol = "~"
+
+[character]
+success_symbol = "[❯](bold)"
+error_symbol = "[❯](bold red)"
+
+[cmd_duration]
+min_time = 0
+format = "[$duration]($style)"
+style = "green"
+
+[status]
+disabled = false
+format = "[Code: $status]($style) "
+style = "red"
+
+[status.map_symbol]
+# Not needed for basic usage
