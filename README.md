@@ -1,4 +1,4 @@
-# Dotfiles managed by mise
+# Dotfiles managed by mise v2026.9.10
 
 This repository contains my mise configuration for tools and dotfiles. Mise
 uses `mise.toml` to install the declared tools and deploy files from
