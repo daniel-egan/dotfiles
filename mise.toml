@@ -41,6 +41,11 @@
   { os = "macos", target = "~/.config/git/hooks/pre-commit" },
   { os = "windows", target = "~/.config/git/hooks/pre-commit" },
 ] }
+"vim/vimrc" = { source = "dotfiles/vim/vimrc", mode = "symlink", variants = [
+  { os = "linux", target = "~/.vimrc" },
+  { os = "macos", target = "~/.vimrc" },
+  { os = "windows", target = "~/.vimrc" },
+] }
 
 [tools]
 powershell = "7.6.6"
